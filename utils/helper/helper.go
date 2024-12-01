@@ -9,6 +9,8 @@ import (
 	"io/ioutil"
 	"math/rand"
 	"os/exec"
+	"regexp"
+	"syscall"
 	"time"
 )
 
@@ -95,4 +97,54 @@ func Command(name string, mode int, arg ...string) error {
 		return err
 	}
 	return nil
+}
+
+// ParseFilename 解析文件名中的日期时间
+func ParseFilename(filename string) (time.Time, error) {
+	// 定义正则表达式，匹配文件名中的日期时间部分
+	re := regexp.MustCompile(`(?:VID|IMG)_(\d{8})_(\d{6})_.*\..+`)
+	matches := re.FindStringSubmatch(filename)
+	if len(matches) != 3 {
+		return time.Time{}, fmt.Errorf("filename format invalid: %s", filename)
+	}
+
+	// 提取日期和时间部分
+	datePart := matches[1] // 例如：20190831
+	timePart := matches[2] // 例如：211215
+
+	// 将日期和时间部分拼接成完整时间字符串
+	dateTimeStr := fmt.Sprintf("%s%s", datePart, timePart)
+
+	// 加载上海时区
+	loc, err := time.LoadLocation("Local")
+	if err != nil {
+		return time.Time{}, fmt.Errorf("failed to load Shanghai timezone: %w", err)
+	}
+
+	// 解析为 time.Time 类型，指定时区
+	parsedTime, err := time.ParseInLocation("20060102150405", dateTimeStr, loc)
+	if err != nil {
+		return time.Time{}, fmt.Errorf("failed to parse time: %w", err)
+	}
+
+	return parsedTime, nil
+}
+
+// SetFileTime 设置文件时间
+func SetFileTime(path string, time time.Time) (err error) {
+	path, err = syscall.FullPath(path)
+	if err != nil {
+		return
+	}
+	pathPtr, err := syscall.UTF16PtrFromString(path)
+	if err != nil {
+		return
+	}
+	handle, err := syscall.CreateFile(pathPtr, syscall.FILE_WRITE_ATTRIBUTES, syscall.FILE_SHARE_WRITE, nil, syscall.OPEN_EXISTING, syscall.FILE_FLAG_BACKUP_SEMANTICS, 0)
+	if err != nil {
+		return
+	}
+	defer syscall.Close(handle)
+	t := syscall.NsecToFiletime(syscall.TimespecToNsec(syscall.NsecToTimespec(time.UnixNano())))
+	return syscall.SetFileTime(handle, &t, &t, &t)
 }

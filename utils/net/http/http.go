@@ -8,6 +8,7 @@ import (
 	pbar "github.com/cheggaaa/pb/v3"
 	"github.com/qinjintian/qq-zone/utils"
 	"github.com/qinjintian/qq-zone/utils/filer"
+	"github.com/qinjintian/qq-zone/utils/helper"
 	"io"
 	"io/ioutil"
 	"mime"
@@ -342,7 +343,16 @@ func Download(uri string, target string, headers map[string]string, msgs ...inte
 			return nil, err
 		}
 	}
-	defer file.Close()
+	defer func() {
+		file.Close()
+
+		// 设置原始时间
+		if dstTime, err := helper.ParseFilename(filepath.Base(target)); err == nil {
+			if err := helper.SetFileTime(target, dstTime); err != nil {
+				fmt.Println("设置'相片/视频时间'失败")
+			}
+		}
+	}()
 
 	if progressbar {
 		reader := io.LimitReader(io.MultiReader(resp.Body), int64(resp.ContentLength))

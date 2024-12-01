@@ -536,12 +536,14 @@ func (q *QzoneController) StartDownload(hostUin, uin, gtk, cookie string, key in
 		}
 
 		fileInfo, _ := os.Stat(resp["path"].(string))
+		dstTime, _ := helper.ParseFilename(resp["filename"].(string))
 		output := fmt.Sprintf("[%d/%d]相册[%s]第%d个%s文件下载完成", sequence, photoTotal, album.Get("name").String(), key+1, cate) + "\n" +
 			"当前/账号信息：" + hostUin + "\n" +
 			"下载/完成时间：" + time.Now().Format("2006/01/02 15:04:05") + "\n" +
 			"相片/视频原名：" + photo.Get("name").String() + "\n" +
 			"相片/视频名称：" + resp["filename"].(string) + "\n" +
 			"相片/视频大小：" + filer.FormatBytes(fileInfo.Size()) + "\n" +
+			"文件原始时间：" + dstTime.Format("2006/01/02 15:04:05") + "\n" +
 			"相片/视频地址：" + source + "\n"
 		fmt.Println(output)
 
