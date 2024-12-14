@@ -1,0 +1,5 @@
+.git/
+.idea/
+storage/
+frontend/dist/
+frontend/node_modules/

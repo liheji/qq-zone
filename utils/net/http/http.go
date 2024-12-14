@@ -6,9 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	pbar "github.com/cheggaaa/pb/v3"
-	"github.com/qinjintian/qq-zone/utils"
-	"github.com/qinjintian/qq-zone/utils/filer"
-	"github.com/qinjintian/qq-zone/utils/helper"
 	"io"
 	"io/ioutil"
 	"mime"
@@ -16,6 +13,9 @@ import (
 	pkgurl "net/url"
 	"os"
 	"path/filepath"
+	"qq-zone/utils"
+	"qq-zone/utils/filer"
+	"qq-zone/utils/helper"
 	"strings"
 	"time"
 )
@@ -345,12 +345,9 @@ func Download(uri string, target string, headers map[string]string, msgs ...inte
 	}
 	defer func() {
 		file.Close()
-
 		// 设置原始时间
-		if dstTime, err := helper.ParseFilename(filepath.Base(target)); err == nil {
-			if err := helper.SetFileTime(target, dstTime); err != nil {
-				fmt.Println("设置'相片/视频时间'失败")
-			}
+		if err := helper.SetExifTime(target); err != nil {
+			fmt.Printf("设置文件（%v）时间失败：%v", target, err)
 		}
 	}()
 

@@ -8,9 +8,10 @@ import (
 	"golang.org/x/text/transform"
 	"io/ioutil"
 	"math/rand"
+	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
-	"syscall"
 	"time"
 )
 
@@ -99,6 +100,31 @@ func Command(name string, mode int, arg ...string) error {
 	return nil
 }
 
+// SetExifTime 修改文件拍摄/录制时间
+func SetExifTime(filePath string) error {
+	dstTime, err := ParseFilename(filepath.Base(filePath))
+	if err != nil {
+		return err
+	}
+
+	// exiftool 可执行文件路径
+	exifToolPath := "exiftool"
+	if _, err := exec.LookPath(exifToolPath); err != nil {
+		return fmt.Errorf("exiftool not found: %v", err)
+	}
+
+	// 转化位YYYY:MM:DD HH:MM:SS
+	dataStr := dstTime.Format("2006:01:02 15:04:05")
+
+	// 构造 exiftool 命令
+	err = Command(exifToolPath, 0, "-DateTimeOriginal="+dataStr, "-overwrite_original", filePath)
+	if err != nil {
+		return err
+	}
+
+	return os.Chtimes(filePath, dstTime, dstTime)
+}
+
 // ParseFilename 解析文件名中的日期时间
 func ParseFilename(filename string) (time.Time, error) {
 	// 定义正则表达式，匹配文件名中的日期时间部分
@@ -118,33 +144,14 @@ func ParseFilename(filename string) (time.Time, error) {
 	// 加载上海时区
 	loc, err := time.LoadLocation("Local")
 	if err != nil {
-		return time.Time{}, fmt.Errorf("failed to load Shanghai timezone: %w", err)
+		return time.Time{}, err
 	}
 
 	// 解析为 time.Time 类型，指定时区
 	parsedTime, err := time.ParseInLocation("20060102150405", dateTimeStr, loc)
 	if err != nil {
-		return time.Time{}, fmt.Errorf("failed to parse time: %w", err)
+		return time.Time{}, err
 	}
 
 	return parsedTime, nil
-}
-
-// SetFileTime 设置文件时间
-func SetFileTime(path string, time time.Time) (err error) {
-	path, err = syscall.FullPath(path)
-	if err != nil {
-		return
-	}
-	pathPtr, err := syscall.UTF16PtrFromString(path)
-	if err != nil {
-		return
-	}
-	handle, err := syscall.CreateFile(pathPtr, syscall.FILE_WRITE_ATTRIBUTES, syscall.FILE_SHARE_WRITE, nil, syscall.OPEN_EXISTING, syscall.FILE_FLAG_BACKUP_SEMANTICS, 0)
-	if err != nil {
-		return
-	}
-	defer syscall.Close(handle)
-	t := syscall.NsecToFiletime(syscall.TimespecToNsec(syscall.NsecToTimespec(time.UnixNano())))
-	return syscall.SetFileTime(handle, &t, &t, &t)
 }
