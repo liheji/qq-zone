@@ -346,8 +346,8 @@ func Download(uri string, target string, headers map[string]string, msgs ...inte
 	defer func() {
 		file.Close()
 		// 设置原始时间
-		if err := helper.SetExifTime(target); err != nil {
-			fmt.Printf("设置文件（%v）时间失败：%v", target, err)
+		if err := helper.SetMetadataTime(target); err != nil {
+			fmt.Printf("设置文件（%v）时间失败：%v\n", target, err)
 		}
 	}()
 

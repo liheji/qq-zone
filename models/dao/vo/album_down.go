@@ -111,7 +111,7 @@ type Album struct {
 }
 
 func (a *Album) Deal() {
-	a.Pre = "/avatar?url=" + base64.StdEncoding.EncodeToString([]byte(a.Pre))
+	a.Pre = "/avatar/" + base64.StdEncoding.EncodeToString([]byte(a.Pre))
 }
 func (a *Album) Compare(other SpecialDeal) int {
 	otherAlbum, ok := other.(*Album)
@@ -141,7 +141,7 @@ type Friend struct {
 }
 
 func (f *Friend) Deal() {
-	f.Img = "/avatar?url=" + base64.StdEncoding.EncodeToString([]byte(f.Img))
+	f.Img = "/avatar/" + base64.StdEncoding.EncodeToString([]byte(f.Img))
 }
 
 // 实现 Compare 方法

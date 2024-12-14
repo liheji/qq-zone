@@ -7,7 +7,7 @@ import (
 
 func SetGlobalSetting() {
 	// 设置Gin模式
-	gin.SetMode(gin.DebugMode)
+	gin.SetMode(gin.ReleaseMode)
 	// 设置日志输出
 	gin.DefaultWriter = os.Stdout
 }

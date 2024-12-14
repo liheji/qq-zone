@@ -3,9 +3,7 @@
     <el-header>
       <el-row justify="space-between">
         <el-button type="primary" @click="dialogVisible = true">重新配置</el-button>
-        <el-link :href="BASE_URL +`/result`" :disabled="!downloadEnable" target="_blank"
-                 style="margin-left: 10px;">下载结果数据
-        </el-link>
+        <el-button type="primary" :disabled="!downloadEnable" @click="downloadQzone">下载结果数据</el-button>
         <div>
           服务器连接状态：
           <el-tag v-if="readyState===0" size="large" type="primary">连接中</el-tag>
@@ -132,6 +130,10 @@ function initWebSocket(key) {
   })
 
   qWebSocket.value = obj
+}
+
+const downloadQzone = () => {
+  window.open(BASE_URL + "/result", "_blank");
 }
 
 </script>

@@ -95,7 +95,7 @@ func (a *AlbumDown) SpiderAlbumSelf() error {
 
 // SpiderAlbumAll 爬取所有相册
 func (a *AlbumDown) SpiderAlbumAll() error {
-	task := 10      // "请输入1~100之间的下载并行任务数，默认为1："
+	task := 16      // "请输入1~100之间的下载并行任务数，默认为1："
 	exclude := true // "是否开启防重复下载，可选[y/n]，默认是y："
 	var albums = strings.Split(a.q.Album, "$$")
 

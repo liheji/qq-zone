@@ -15,6 +15,16 @@ func GetQzoneTarGz() (string, error) {
 	}
 
 	tarFilePath := "storage/qzone.tar.gz"
+	cacheStr, err := helper.GetFileDir(dirPath)
+	if err != nil {
+		return "", err
+	}
+	cacheKey := fmt.Sprintf("%v,%v", helper.Md5(cacheStr), len(cacheStr))
+	if _, ok := SingleCache().Get(cacheKey); ok {
+		return tarFilePath, nil
+	}
+
+	// 清理之前打包的文件
 	if _, err := os.Stat(tarFilePath); err == nil {
 		_ = os.RemoveAll(tarFilePath)
 	}
@@ -25,7 +35,7 @@ func GetQzoneTarGz() (string, error) {
 	}
 
 	//  将工作目录切换到 storage
-	err := os.Chdir("storage")
+	err = os.Chdir("storage")
 	if err != nil {
 		return "", fmt.Errorf("failed to change directory: %v", err)
 	}
@@ -33,9 +43,12 @@ func GetQzoneTarGz() (string, error) {
 	defer os.Chdir("..")
 
 	// 打包 qzone 文件夹的内容
-	err = helper.Command(tarPath, 0, "-czf", "qzone.tar.gz", "qzone")
+	_, err = helper.Command(tarPath, 0, "-czf", "qzone.tar.gz", "qzone")
 	if err != nil {
 		return "", err
 	}
+
+	SingleCache().SetDefault(cacheKey, "1")
+
 	return tarFilePath, nil
 }
